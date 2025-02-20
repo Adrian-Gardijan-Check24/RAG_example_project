@@ -4,10 +4,6 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from sklearn.decomposition import PCA
 
-class TestClass:
-    def __init__(self):
-        pass
-
 class VisualizationApp:
     def __init__(self, chunks, embedding_model, prompt_model_function, initial_query=""):
         self.chunks = chunks
