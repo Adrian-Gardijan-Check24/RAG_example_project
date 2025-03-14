@@ -2,7 +2,12 @@ import plotly.graph_objs as go
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-from sklearn.decomposition import PCA
+from umap import UMAP
+import numpy as np
+
+class TestClass:
+    def __init__(self):
+        pass
 
 class VisualizationApp:
     def __init__(self, chunks, embedding_model, prompt_model_function, initial_query=""):
@@ -11,10 +16,10 @@ class VisualizationApp:
         self.prompt_model_function = prompt_model_function
         self.query = initial_query
 
-        embeddings = embedding_model.embed_documents(chunks)
+        self.embeddings = embedding_model.embed_documents(chunks)
 
-        self.pca = PCA(n_components=2)
-        self.pca_embeddings = self.pca.fit_transform(embeddings)
+        self.reducer = UMAP(n_components=2, n_neighbors=8, min_dist=0.1, spread=0.12, random_state=42)
+        self.pca_embeddings = self.reducer.fit_transform(self.embeddings)
 
         # Update the layout
         self.layout = go.Layout(
@@ -37,9 +42,10 @@ class VisualizationApp:
             y=self.pca_embeddings[[i for i in range(len(chunks))], 1],
             customdata=["non-relevant"] * len(chunks),
             mode='markers',
-            marker=dict(size=12, color='blue', opacity=0.7),
-            text=[],
-            hoverinfo='none',
+            marker=dict(size=10, color='blue', opacity=0.7),
+            text=chunks,
+            hoverinfo='text', 
+            textposition='top center',
             name='Info-Chunks'
         )
 
@@ -80,7 +86,7 @@ class VisualizationApp:
                 ], style={'width': '40%', 'display': 'inline-block', 'vertical-align': 'top'}),
 
                 html.Div([
-                    html.Div("In dieser Grafik sind die Informations-Chunks aus dem 3072-dimensionalen Embedding-Space entlang der 2 aussagekräftigsten Dimensionen dargestellt (PCA). Hover über einem Punkt im Plot um die zugehörige Information anzuzeigen.", style={'font-size': '11px', 'color': 'gray'}),
+                    html.Div("Deine Mudda In dieser Grafik sind die Informations-Chunks aus dem 3072-dimensionalen Embedding-Space entlang der 2 aussagekräftigsten Dimensionen dargestellt (PCA). Hover über einem Punkt im Plot um die zugehörige Information anzuzeigen.", style={'font-size': '11px', 'color': 'gray'}),
 
                     html.Div([
                     html.P("Verwendete Informations-Chunks:", style={'margin-top': '15px', 'margin-bottom': '5px', 'font-size': '14px', 'color': 'black'}),
@@ -161,15 +167,16 @@ class VisualizationApp:
                 
                 # Create a new trace for the query embedding
                 query_embedding = self.embedding_model.embed_query(query)
-                query_pca = self.pca.transform([query_embedding])[0]
+                query_pca = self.reducer.transform(np.array([query_embedding]))[0]
                 query_trace = go.Scatter(
                     x=[query_pca[0]],
                     y=[query_pca[1]],
                     customdata=['query'], 
                     mode='markers',
-                    marker=dict(size=12, color='red', opacity=0.7),
+                    marker=dict(size=10, color='red', opacity=0.7),
                     text=[query],  # Add the query text to display on hover
-                    hoverinfo='none',  # Enable hover info
+                    hoverinfo='text', 
+                    textposition='top center',
                     name='Frage'
                 )
                 
@@ -188,9 +195,10 @@ class VisualizationApp:
                     y=self.pca_embeddings[relevant_chunks, 1],
                     customdata=["relevant"] * len(relevant_chunks),
                     mode='markers',
-                    marker=dict(size=12, color='#e6840e', opacity=0.7),
+                    marker=dict(size=10, color='#e6840e', opacity=0.7),
                     text=[self.chunks[i] for i in relevant_chunks],
-                    hoverinfo='none',
+                    hoverinfo='text', 
+                    textposition='top center',
                     name='Relevante Chunks'
                 )
                 
@@ -199,15 +207,17 @@ class VisualizationApp:
                     y=self.pca_embeddings[non_relevant_chunks, 1],
                     customdata=["non-relevant"] * len(non_relevant_chunks),
                     mode='markers',
-                    marker=dict(size=12, color='blue', opacity=0.7),
+                    marker=dict(size=10, color='blue', opacity=0.7),
                     text=[self.chunks[i] for i in non_relevant_chunks],
-                    hoverinfo='none',
+                    hoverinfo='text',
+                    textposition='top center',
                     name='Info-Chunks'
                 )
                 
                 # Update the figure with the new traces
                 figure = {
                     'data': [non_relevant_trace, relevant_trace, query_trace],
+                    # 'data': [non_relevant_trace, relevant_trace],
                     'layout': self.layout
                 }
                 
