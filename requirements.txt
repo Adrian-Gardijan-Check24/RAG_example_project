@@ -1,5 +1,5 @@
-dash>=3.0,<4
-plotly>=6.0,<7
+dash==3.2.0
+comm>=0.2.2
+plotly>=6,<7
 numpy>=1.26,<3
 umap-learn>=0.5,<0.6
-nest-asyncio>=1.6,<2
