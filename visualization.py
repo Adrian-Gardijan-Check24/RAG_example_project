@@ -175,6 +175,12 @@ class VisualizationApp:
             # Return the original figure, empty model answer, and empty augmented prompt if no query is submitted
             return [dash.no_update for _ in range(5)]
 
-    def run(self):
-        # Run the Dash app
-        self.app.run(debug=True)
+def run(self, port=8050, height=700):
+    self.app.run(
+        host="127.0.0.1",
+        port=port,
+        debug=False,             
+        use_reloader=False,       
+        jupyter_mode="inline",    
+        jupyter_height=height,
+    )
