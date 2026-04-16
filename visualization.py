@@ -177,4 +177,4 @@ class VisualizationApp:
 
     def run(self):
         # Run the Dash app
-        self.app.run_server(debug=True)
+        self.app.run(debug=True)
